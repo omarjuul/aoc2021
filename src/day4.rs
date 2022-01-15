@@ -38,15 +38,33 @@ pub fn run(input: &(Vec<u8>, Vec<Board>)) -> usize {
     let marks = &input.0;
     let mut boards = input.1.clone();
 
+    let (winning_board, winning_mark) = determine_winning_board(marks, &mut boards);
+    return boards[winning_board].get_score(winning_mark);
+}
+
+fn determine_winning_board(marks: &Vec<u8>, boards: &mut Vec<Board>) -> (usize, u8) {
     for &mark in marks {
-        for board in boards.iter_mut() {
+        for (idx, board) in boards.iter_mut().enumerate() {
             board.mark_number(mark);
             if board.check_for_bingo() {
-                return board.get_score(mark);
+                return (idx, mark);
             }
         }
     }
     unreachable!()
+}
+
+#[aoc(day4, part2)]
+pub fn run_to_lose(input: &(Vec<u8>, Vec<Board>)) -> usize {
+    let marks = &input.0;
+    let mut boards = input.1.clone();
+
+    for _ in 1..boards.len() {
+        let (winning_board, _) = determine_winning_board(marks, &mut boards);
+        boards.remove(winning_board);
+    }
+    let (winning_board, winning_mark) = determine_winning_board(marks, &mut boards);
+    return boards[winning_board].get_score(winning_mark);
 }
 
 #[derive(Clone, Copy)]

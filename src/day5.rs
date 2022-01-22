@@ -59,6 +59,21 @@ pub fn run(input: &Vec<(Coord, Coord)>) -> usize {
     filled_map.into_iter().filter(|kvp| kvp.1 >= 2).count()
 }
 
+#[aoc(day5, part2)]
+pub fn run_incl_diag(input: &Vec<(Coord, Coord)>) -> usize {
+    let filled_map = input.into_iter()
+        .flat_map(|(start, end)| Line::new(start.clone(), end.clone()))
+        .into_iter()
+        .fold(HashMap::<Coord, u8>::new(), |mut map, point| {
+            map.entry(point)
+                .and_modify(|count| *count += 1u8)
+                .or_insert(1);
+            map
+        });
+
+    filled_map.into_iter().filter(|kvp| kvp.1 >= 2).count()
+}
+
 struct Line {
     current_point: Coord,
     end_point: Coord,
@@ -83,26 +98,23 @@ impl Iterator for Line {
             self.started = true;
             return Some(self.current_point);
         }
+        if self.current_point == self.end_point {
+            return None;
+        }
 
         if self.current_point.x < self.end_point.x {
             self.current_point.x += 1;
-            return Some(self.current_point);
-        }
-        if self.current_point.x > self.end_point.x {
+        } else if self.current_point.x > self.end_point.x {
             self.current_point.x -= 1;
-            return Some(self.current_point);
         }
 
         if self.current_point.y < self.end_point.y {
             self.current_point.y += 1;
-            return Some(self.current_point);
-        }
-        if self.current_point.y > self.end_point.y {
+        } else if self.current_point.y > self.end_point.y {
             self.current_point.y -= 1;
-            return Some(self.current_point);
         }
 
-        return None;
+        return Some(self.current_point);
     }
 }
 
@@ -119,6 +131,13 @@ mod tests {
         assert_eq!(result, 8622);
     }
 
+    #[test]
+    fn input_known_false_answer() {
+        let result = run_incl_diag(&input_generator(INPUT));
+
+        assert_eq!(result, 22037);
+    }
+
     const EXAMPLE: &str = include_str!("../input/2021/day5_example.txt");
 
     #[test]
@@ -126,5 +145,12 @@ mod tests {
         let count = run(&input_generator(EXAMPLE));
 
         assert_eq!(count, 5);
+    }
+
+    #[test]
+    fn example_has_12_overlapping_points_when_including_diagonals() {
+        let count = run_incl_diag(&input_generator(EXAMPLE));
+
+        assert_eq!(count, 12);
     }
 }

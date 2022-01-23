@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::collections::HashMap;
 
 #[aoc_generator(day5)]
@@ -42,12 +43,12 @@ impl From<&str> for Coord {
 }
 
 #[aoc(day5, part1)]
-pub fn run(input: &Vec<(Coord, Coord)>) -> usize {
+pub fn run(input: &[(Coord, Coord)]) -> usize {
     let horiz_and_vertical = input
-        .into_iter()
+        .iter()
         .filter(|(start, end)| start.x == end.x || start.y == end.y);
     let filled_map = horiz_and_vertical
-        .flat_map(|(start, end)| Line::new(start.clone(), end.clone()))
+        .flat_map(|(start, end)| Line::new(*start, *end))
         .into_iter()
         .fold(HashMap::<Coord, u8>::new(), |mut map, point| {
             map.entry(point)
@@ -60,9 +61,9 @@ pub fn run(input: &Vec<(Coord, Coord)>) -> usize {
 }
 
 #[aoc(day5, part2)]
-pub fn run_incl_diag(input: &Vec<(Coord, Coord)>) -> usize {
-    let filled_map = input.into_iter()
-        .flat_map(|(start, end)| Line::new(start.clone(), end.clone()))
+pub fn run_incl_diag(input: &[(Coord, Coord)]) -> usize {
+    let filled_map = input.iter()
+        .flat_map(|(start, end)| Line::new(*start, *end))
         .into_iter()
         .fold(HashMap::<Coord, u8>::new(), |mut map, point| {
             map.entry(point)
@@ -82,11 +83,11 @@ struct Line {
 
 impl Line {
     fn new(start_point: Coord, end_point: Coord) -> Line {
-        return Line {
+        Line {
             current_point: start_point,
             end_point,
             started: false,
-        };
+        }
     }
 }
 
@@ -102,19 +103,18 @@ impl Iterator for Line {
             return None;
         }
 
-        if self.current_point.x < self.end_point.x {
-            self.current_point.x += 1;
-        } else if self.current_point.x > self.end_point.x {
-            self.current_point.x -= 1;
+        match self.current_point.x.cmp(&self.end_point.x) {
+            Ordering::Greater => self.current_point.x -= 1,
+            Ordering::Less => self.current_point.x += 1,
+            Ordering::Equal => ()
+        }
+        match self.current_point.y.cmp(&self.end_point.y) {
+            Ordering::Greater => self.current_point.y -= 1,
+            Ordering::Less => self.current_point.y += 1,
+            Ordering::Equal => ()
         }
 
-        if self.current_point.y < self.end_point.y {
-            self.current_point.y += 1;
-        } else if self.current_point.y > self.end_point.y {
-            self.current_point.y -= 1;
-        }
-
-        return Some(self.current_point);
+        Some(self.current_point)
     }
 }
 
@@ -125,14 +125,14 @@ mod tests {
     const INPUT: &str = include_str!("../input/2021/day5.txt");
 
     #[test]
-    fn input_known_false_answer() {
+    fn input_known_answer() {
         let result = run(&input_generator(INPUT));
 
         assert_eq!(result, 8622);
     }
 
     #[test]
-    fn input_known_false_answer() {
+    fn input_known_answer_p2() {
         let result = run_incl_diag(&input_generator(INPUT));
 
         assert_eq!(result, 22037);

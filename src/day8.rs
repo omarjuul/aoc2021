@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::convert::TryInto;
 
 #[aoc_generator(day8)]
@@ -41,28 +42,52 @@ pub struct NoteEntry {
 
 #[derive(Debug)]
 pub struct SignalPattern {
-    code: u8,
+    set: HashSet<char>,
     len: u8,
+}
+
+struct DigitPattern {
+    set: HashSet<char>,
+    len: u8,
+    digit: Digit,
+}
+
+enum Digit {
+    One,
+    Two,
+    Three,
+    Four,
+    Five,
+    Six,
+    Seven,
+    Eight,
+    Nine,
+    Zero,
+}
+
+impl Into<u32> for Digit {
+    fn into(self) -> u32 {
+        match self {
+            Digit::One => { 1 }
+            Digit::Two => { 2 }
+            Digit::Three => { 3 }
+            Digit::Four => { 4 }
+            Digit::Five => { 5 }
+            Digit::Six => { 6 }
+            Digit::Seven => { 7 }
+            Digit::Eight => { 8 }
+            Digit::Nine => { 9 }
+            Digit::Zero => { 0 }
+        }
+    }
 }
 
 impl From<&str> for SignalPattern {
     fn from(str: &str) -> Self {
-        let code = str
-            .trim()
-            .chars()
-            .map(|c| match c {
-                'a' => 1,
-                'b' => 2,
-                'c' => 4,
-                'd' => 8,
-                'e' => 16,
-                'f' => 32,
-                'g' => 64,
-                _ => panic!("unexpected character '{}' in string '{}'", c, str),
-            })
-            .sum();
+        let set: HashSet<char> = HashSet::from_iter(str.trim().chars());
+
         let len = str.trim().len() as u8;
-        SignalPattern { code, len }
+        SignalPattern { set, len }
     }
 }
 
@@ -79,9 +104,14 @@ fn is_easy(len: u8) -> bool {
     matches!(len, 2 | 3 | 4 | 7)
 }
 
-// #[aoc(day8, part2)]
-// pub fn run_p2(input: &[u32]) -> u64 {
-// }
+// 1 -> 7 -> 3 -> 9 -> 8
+// 1 -> 4 -> 9 -> 8
+// 2 5 6 0
+
+#[aoc(day8, part2)]
+pub fn run_p2(input: &[NoteEntry]) -> usize {
+    input.iter().map(determine_digits).map(|(entry, digits)| output_value(entry.output_values, digits))
+}
 
 #[cfg(test)]
 mod tests {

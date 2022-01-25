@@ -62,7 +62,8 @@ pub fn run(input: &[(Coord, Coord)]) -> usize {
 
 #[aoc(day5, part2)]
 pub fn run_incl_diag(input: &[(Coord, Coord)]) -> usize {
-    let filled_map = input.iter()
+    let filled_map = input
+        .iter()
         .flat_map(|(start, end)| Line::new(*start, *end))
         .into_iter()
         .fold(HashMap::<Coord, u8>::new(), |mut map, point| {
@@ -106,12 +107,12 @@ impl Iterator for Line {
         match self.current_point.x.cmp(&self.end_point.x) {
             Ordering::Greater => self.current_point.x -= 1,
             Ordering::Less => self.current_point.x += 1,
-            Ordering::Equal => ()
+            Ordering::Equal => (),
         }
         match self.current_point.y.cmp(&self.end_point.y) {
             Ordering::Greater => self.current_point.y -= 1,
             Ordering::Less => self.current_point.y += 1,
-            Ordering::Equal => ()
+            Ordering::Equal => (),
         }
 
         Some(self.current_point)

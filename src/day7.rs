@@ -1,6 +1,12 @@
 #[aoc_generator(day7)]
 pub fn input_generator(input: &str) -> Vec<u16> {
-    input.lines().next().unwrap().split(',').map(|n| n.parse::<u16>().unwrap()).collect()
+    input
+        .lines()
+        .next()
+        .unwrap()
+        .split(',')
+        .map(|n| n.parse::<u16>().unwrap())
+        .collect()
 }
 
 #[aoc(day7, part1)]
@@ -17,12 +23,17 @@ fn search_optimal_fuel_cost(positions: &[u16], cost_fn: fn(u32) -> u32) -> u32 {
     let max_pos = positions.iter().max().unwrap();
     let min_pos = positions.iter().min().unwrap();
     let range = *min_pos..=*max_pos;
-    let min_fuel_cost = range.map(|align_pos| calculate_fuel_cost(positions, align_pos, cost_fn)).min();
+    let min_fuel_cost = range
+        .map(|align_pos| calculate_fuel_cost(positions, align_pos, cost_fn))
+        .min();
     min_fuel_cost.unwrap()
 }
 
 fn calculate_fuel_cost(positions: &[u16], align_at: u16, cost_fn: fn(u32) -> u32) -> u32 {
-    positions.iter().map(|&p| cost_fn((align_at as i32 - p as i32).unsigned_abs())).sum()
+    positions
+        .iter()
+        .map(|&p| cost_fn((align_at as i32 - p as i32).unsigned_abs()))
+        .sum()
 }
 
 #[cfg(test)]

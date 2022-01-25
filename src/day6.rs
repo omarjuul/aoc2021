@@ -2,7 +2,13 @@ use std::collections::VecDeque;
 
 #[aoc_generator(day6)]
 pub fn input_generator(input: &str) -> Vec<u8> {
-    input.lines().next().unwrap().split(',').map(|n| n.parse::<u8>().unwrap()).collect()
+    input
+        .lines()
+        .next()
+        .unwrap()
+        .split(',')
+        .map(|n| n.parse::<u8>().unwrap())
+        .collect()
 }
 
 #[aoc(day6, part1)]
@@ -34,7 +40,10 @@ impl From<&[u8]> for LanternFishPopulation {
             pop[*i as usize] += 1;
         }
         let population_counters = VecDeque::from(pop);
-        LanternFishPopulation { day: 0, population_counters }
+        LanternFishPopulation {
+            day: 0,
+            population_counters,
+        }
     }
 }
 
@@ -74,7 +83,8 @@ mod tests {
     fn input_known_answer_p2() {
         let result = run_256_days(&input_generator(INPUT));
 
-        assert_eq!(result, 1592918715629);}
+        assert_eq!(result, 1592918715629);
+    }
 
     const EXAMPLE: [u8; 5] = [3, 4, 3, 1, 2];
 

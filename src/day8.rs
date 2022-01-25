@@ -8,9 +8,25 @@ pub fn input_generator(input: &str) -> Vec<NoteEntry> {
 fn parse_line(line: &str) -> NoteEntry {
     let (patterns_str, output_str) = line.split_once('|').unwrap();
 
-    let signal_patterns = to_arr(patterns_str.splitn(10, ' ').map(|str| SignalPattern::from(str)).collect());
-    let output_values = to_arr(output_str.splitn(4, ' ').map(|str| SignalPattern::from(str)).collect());
-    NoteEntry { signal_patterns, output_values }
+    let signal_patterns = to_arr(
+        patterns_str
+            .trim()
+            .splitn(10, ' ')
+            .map(SignalPattern::from)
+            .collect(),
+    );
+    let output_values = to_arr(
+        output_str
+            .trim()
+            .splitn(4, ' ')
+            .map(SignalPattern::from)
+            .collect(),
+    );
+
+    NoteEntry {
+        signal_patterns,
+        output_values,
+    }
 }
 
 fn to_arr<T, const N: usize>(v: Vec<T>) -> [T; N] {
@@ -18,28 +34,33 @@ fn to_arr<T, const N: usize>(v: Vec<T>) -> [T; N] {
         .unwrap_or_else(|v: Vec<T>| panic!("Expected a Vec of length {} but it was {}", N, v.len()))
 }
 
-struct NoteEntry {
+pub struct NoteEntry {
     signal_patterns: [SignalPattern; 10],
     output_values: [SignalPattern; 4],
 }
 
-struct SignalPattern {
+#[derive(Debug)]
+pub struct SignalPattern {
     code: u8,
     len: u8,
 }
 
 impl From<&str> for SignalPattern {
     fn from(str: &str) -> Self {
-        let code = str.trim().chars().map(|c| match c {
-            'a' => 1,
-            'b' => 2,
-            'c' => 4,
-            'd' => 8,
-            'e' => 16,
-            'f' => 32,
-            'g' => 64,
-            _ => panic!("unexpected character {}", c)
-        }).sum();
+        let code = str
+            .trim()
+            .chars()
+            .map(|c| match c {
+                'a' => 1,
+                'b' => 2,
+                'c' => 4,
+                'd' => 8,
+                'e' => 16,
+                'f' => 32,
+                'g' => 64,
+                _ => panic!("unexpected character '{}' in string '{}'", c, str),
+            })
+            .sum();
         let len = str.trim().len() as u8;
         SignalPattern { code, len }
     }
@@ -47,17 +68,15 @@ impl From<&str> for SignalPattern {
 
 #[aoc(day8, part1)]
 pub fn run(input: &[NoteEntry]) -> usize {
-    input.iter().flat_map(|n| n.output_values).filter(|pat| is_easy(pat.len)).count()
+    input
+        .iter()
+        .flat_map(|n| &n.output_values)
+        .filter(|&pat| is_easy(pat.len))
+        .count()
 }
 
 fn is_easy(len: u8) -> bool {
-    match len {
-        2 => true,
-        3 => true,
-        4 => true,
-        8 => true,
-        _ => false
-    }
+    matches!(len, 2 | 3 | 4 | 7)
 }
 
 // #[aoc(day8, part2)]
@@ -74,22 +93,22 @@ mod tests {
     fn input_known_answer() {
         let result = run(&input_generator(INPUT));
 
-        assert_eq!(result, 0);
+        assert_eq!(result, 445);
     }
 
     // #[test]
     // fn input_known_answer_p2() {
     //     let result = run_p2(&input_generator(INPUT));
-    // 
+    //
     //     assert_eq!(result, 0);
     // }
 
-    const EXAMPLE: [u32; 5] = [3, 4, 3, 1, 2];
+    const EXAMPLE: &str = include_str!("../input/2021/day8_example.txt");
 
     #[test]
     fn example() {
-        let actual = run(&EXAMPLE);
+        let actual = run(&input_generator(EXAMPLE));
 
-        assert_eq!(actual, 0);
+        assert_eq!(actual, 26);
     }
 }

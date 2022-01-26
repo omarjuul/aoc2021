@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::convert::TryInto;
 
 #[aoc_generator(day8)]
@@ -42,16 +42,16 @@ pub struct NoteEntry {
 
 #[derive(Debug)]
 pub struct SignalPattern {
-    set: HashSet<char>,
+    string_rep: String,
     len: u8,
 }
 
-struct DigitPattern {
-    set: HashSet<char>,
-    len: u8,
+struct DigitPattern<'a> {
+    string_rep: &'a str,
     digit: Digit,
 }
 
+#[derive(Copy, Clone)]
 enum Digit {
     One,
     Two,
@@ -68,26 +68,29 @@ enum Digit {
 impl Into<u32> for Digit {
     fn into(self) -> u32 {
         match self {
-            Digit::One => { 1 }
-            Digit::Two => { 2 }
-            Digit::Three => { 3 }
-            Digit::Four => { 4 }
-            Digit::Five => { 5 }
-            Digit::Six => { 6 }
-            Digit::Seven => { 7 }
-            Digit::Eight => { 8 }
-            Digit::Nine => { 9 }
-            Digit::Zero => { 0 }
+            Digit::One => 1,
+            Digit::Two => 2,
+            Digit::Three => 3,
+            Digit::Four => 4,
+            Digit::Five => 5,
+            Digit::Six => 6,
+            Digit::Seven => 7,
+            Digit::Eight => 8,
+            Digit::Nine => 9,
+            Digit::Zero => 0,
         }
     }
 }
 
 impl From<&str> for SignalPattern {
     fn from(str: &str) -> Self {
-        let set: HashSet<char> = HashSet::from_iter(str.trim().chars());
+        let mut sorted_chars = str.trim().chars().collect::<Vec<_>>();
+        sorted_chars.sort_unstable();
+
+        let string_rep: String = sorted_chars.into_iter().collect();
 
         let len = str.trim().len() as u8;
-        SignalPattern { set, len }
+        SignalPattern { string_rep, len }
     }
 }
 
@@ -104,13 +107,86 @@ fn is_easy(len: u8) -> bool {
     matches!(len, 2 | 3 | 4 | 7)
 }
 
-// 1 -> 7 -> 3 -> 9 -> 8
-// 1 -> 4 -> 9 -> 8
-// 2 5 6 0
-
 #[aoc(day8, part2)]
 pub fn run_p2(input: &[NoteEntry]) -> usize {
-    input.iter().map(determine_digits).map(|(entry, digits)| output_value(entry.output_values, digits))
+    let entries = input.into_iter().map(determine_digits);
+    let sum_u32: u32 = entries
+        .map(|(entry, digit_mapping)| output_value(&entry.output_values, &digit_mapping))
+        .sum();
+    sum_u32 as usize
+}
+
+fn determine_digits(entry: &NoteEntry) -> (&NoteEntry, HashMap<&str, DigitPattern>) {
+    let mut known_digits: HashMap<&str, DigitPattern> = HashMap::new();
+    let add_known = |sp: &SignalPattern, digit: Digit| { known_digits.insert(&sp.string_rep, DigitPattern { string_rep: &sp.string_rep, digit }); };
+
+    // do the magic
+    // 1 -> 7 -> 3 -> 9 -> 8
+    // 1 -> 4 -> 9 -> 8
+    // 2 5 6 0
+    let mut patterns: Vec<_> = entry.signal_patterns.iter().collect();
+    patterns.sort_unstable_by_key(|&p| p.len);
+    // length 7
+    let eight = patterns.remove(9);
+    add_known(eight, Digit::Eight);
+    // length 2
+    let one = patterns.remove(0);
+    add_known(one, Digit::One);
+    // length 3
+    let seven = patterns.remove(0);
+    add_known(seven, Digit::Seven);
+    // length 4
+    let four = patterns.remove(0);
+    add_known(four, Digit::Four);
+
+    // left:
+    // 2 (len 5)
+    // 3 (len 5)
+    // 5 (len 5)
+    // 6 (len 6)
+    // 9 (len 6)
+    // 0 (len 6)
+    let mut len = patterns.chunks(3);
+    let mut len5: Vec<&&SignalPattern> = len.next().unwrap().iter().collect();
+    let mut len6: Vec<&&SignalPattern> = len.next().unwrap().iter().collect();
+
+    let three_idx = len5.iter().enumerate().find(|(idx, &sp)| sp.contains(&one)).expect("should be there").0;
+    let three = len5.remove(three_idx);
+    let chars = one.string_rep.chars();
+
+    len5.iter().find(|&x| x.string_rep.contains(chars))
+    ;
+    ;
+    ;
+
+    (entry, known_digits)
+}
+
+impl SignalPattern {
+    fn contains(&self, other: &Self) -> bool {
+        other.string_rep.chars().all(|c| self.string_rep.contains(c))
+    }
+}
+
+fn output_value(sp: &[SignalPattern; 4], digits_by_string: &HashMap<&str, DigitPattern>) -> u32 {
+    let multipliers = [1000, 100, 10, 1];
+    let digits: Vec<u32> = sp
+        .iter()
+        .map(|pattern| {
+            digits_by_string
+                .get(&*pattern.string_rep)
+                .unwrap_or_else(|| {
+                    panic!("digit pattern '{}' should be mapped", pattern.string_rep)
+                })
+                .digit
+                .into()
+        })
+        .collect();
+    digits
+        .iter()
+        .enumerate()
+        .map::<u32, _>(|(pos, digit)| digit * multipliers[pos])
+        .sum()
 }
 
 #[cfg(test)]

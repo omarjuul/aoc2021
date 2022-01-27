@@ -118,7 +118,15 @@ pub fn run_p2(input: &[NoteEntry]) -> usize {
 
 fn determine_digits(entry: &NoteEntry) -> (&NoteEntry, HashMap<&str, DigitPattern>) {
     let mut known_digits: HashMap<&str, DigitPattern> = HashMap::new();
-    let add_known = |sp: &SignalPattern, digit: Digit| { known_digits.insert(&sp.string_rep, DigitPattern { string_rep: &sp.string_rep, digit }); };
+    let add_known = |digit: Digit, sp: &SignalPattern| {
+        known_digits.insert(
+            &sp.string_rep,
+            DigitPattern {
+                string_rep: &sp.string_rep,
+                digit,
+            },
+        );
+    };
 
     // do the magic
     // 1 -> 7 -> 3 -> 9 -> 8
@@ -128,43 +136,76 @@ fn determine_digits(entry: &NoteEntry) -> (&NoteEntry, HashMap<&str, DigitPatter
     patterns.sort_unstable_by_key(|&p| p.len);
     // length 7
     let eight = patterns.remove(9);
-    add_known(eight, Digit::Eight);
+    add_known(Digit::Eight, eight);
     // length 2
     let one = patterns.remove(0);
-    add_known(one, Digit::One);
+    add_known(Digit::One, one);
     // length 3
     let seven = patterns.remove(0);
-    add_known(seven, Digit::Seven);
+    add_known(Digit::Seven, seven);
     // length 4
     let four = patterns.remove(0);
-    add_known(four, Digit::Four);
+    add_known(Digit::Four, four);
 
     // left:
-    // 2 (len 5)
-    // 3 (len 5)
-    // 5 (len 5)
-    // 6 (len 6)
-    // 9 (len 6)
-    // 0 (len 6)
+    // 2 (len 5);    6 (len 6)
+    // 3 (len 5);    9 (len 6)
+    // 5 (len 5);    0 (len 6)
     let mut len = patterns.chunks(3);
     let mut len5: Vec<&&SignalPattern> = len.next().unwrap().iter().collect();
     let mut len6: Vec<&&SignalPattern> = len.next().unwrap().iter().collect();
 
-    let three_idx = len5.iter().enumerate().find(|(idx, &sp)| sp.contains(&one)).expect("should be there").0;
+    let three_idx = len5
+        .iter()
+        .enumerate()
+        .find(|(idx, &sp)| sp.contains(&one))
+        .expect("should exist (3)")
+        .0;
     let three = len5.remove(three_idx);
-    let chars = one.string_rep.chars();
+    add_known(Digit::Three, three);
 
-    len5.iter().find(|&x| x.string_rep.contains(chars))
-    ;
-    ;
-    ;
+    let nine_idx = len6
+        .iter()
+        .enumerate()
+        .find(|(idx, &sp)| sp.contains(&four))
+        .expect("should exist (9)")
+        .0;
+    let nine = len6.remove(nine_idx);
+    add_known(Digit::Nine, nine);
+
+    let zero_idx = len6
+        .iter()
+        .enumerate()
+        .find(|(idx, &sp)| sp.contains(&one))
+        .expect("should exist (0)")
+        .0;
+    let zero = len6.remove(zero_idx);
+    add_known(Digit::Zero, zero);
+
+    let six = len6.remove(0); // last one left
+    add_known(Digit::Six, six);
+
+    let five_idx = len5
+        .iter()
+        .enumerate()
+        .find(|(idx, &sp)| six.contains(sp))
+        .expect("should exist (5)")
+        .0;
+    let five = len5.remove(five_idx);
+    add_known(Digit::Five, five);
+
+    let two = len5.remove(0); // last one left
+    add_known(Digit::Two, two);
 
     (entry, known_digits)
 }
 
 impl SignalPattern {
     fn contains(&self, other: &Self) -> bool {
-        other.string_rep.chars().all(|c| self.string_rep.contains(c))
+        other
+            .string_rep
+            .chars()
+            .all(|c| self.string_rep.contains(c))
     }
 }
 

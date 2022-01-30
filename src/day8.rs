@@ -116,88 +116,97 @@ pub fn run_p2(input: &[NoteEntry]) -> usize {
     sum_u32 as usize
 }
 
-fn determine_digits(entry: &NoteEntry) -> (&NoteEntry, HashMap<&str, DigitPattern>) {
-    let mut known_digits: HashMap<&str, DigitPattern> = HashMap::new();
-    let add_known = |digit: Digit, sp: &SignalPattern| {
-        known_digits.insert(
-            &sp.string_rep,
-            DigitPattern {
-                string_rep: &sp.string_rep,
-                digit,
-            },
-        );
-    };
+fn determine_digits<'a>(entry: &'a NoteEntry) -> (&'a NoteEntry, HashMap<&'a str, DigitPattern>) {
+    struct KnownDigits<'a> {
+        map: HashMap<&'a str, DigitPattern<'a>>,
+    }
+    impl<'a, 'b: 'a> KnownDigits<'a> {
+        fn new() -> KnownDigits<'a> {
+            KnownDigits { map: HashMap::new() }
+        }
+
+        fn add_known(&'a mut self, digit: Digit, sp: &'b str) {
+            self.map.insert(
+                sp,
+                DigitPattern {
+                    string_rep: sp,
+                    digit,
+                },
+            );
+        }
+    }
+    let mut known_digits: KnownDigits = KnownDigits::new();
 
     // do the magic
     // 1 -> 7 -> 3 -> 9 -> 8
     // 1 -> 4 -> 9 -> 8
     // 2 5 6 0
     let mut patterns: Vec<_> = entry.signal_patterns.iter().collect();
-    patterns.sort_unstable_by_key(|&p| p.len);
+    patterns.sort_unstable_by_key(|p| p.len);
     // length 7
     let eight = patterns.remove(9);
-    add_known(Digit::Eight, eight);
+    known_digits.add_known(Digit::Eight, &eight.string_rep);
     // length 2
     let one = patterns.remove(0);
-    add_known(Digit::One, one);
+    known_digits.add_known(Digit::One, &one.string_rep);
     // length 3
     let seven = patterns.remove(0);
-    add_known(Digit::Seven, seven);
+    known_digits.add_known(Digit::Seven, &seven.string_rep);
     // length 4
     let four = patterns.remove(0);
-    add_known(Digit::Four, four);
+    known_digits.add_known(Digit::Four, &four.string_rep);
 
     // left:
     // 2 (len 5);    6 (len 6)
     // 3 (len 5);    9 (len 6)
     // 5 (len 5);    0 (len 6)
     let mut len = patterns.chunks(3);
-    let mut len5: Vec<&&SignalPattern> = len.next().unwrap().iter().collect();
-    let mut len6: Vec<&&SignalPattern> = len.next().unwrap().iter().collect();
+    let mut len5: Vec<&&SignalPattern> = len.next().unwrap().into_iter().collect();
+    let mut len6: Vec<&&SignalPattern> = len.next().unwrap().into_iter().collect();
 
     let three_idx = len5
         .iter()
         .enumerate()
-        .find(|(idx, &sp)| sp.contains(&one))
+        .find(|(_, &sp)| sp.contains(&one))
         .expect("should exist (3)")
         .0;
     let three = len5.remove(three_idx);
-    add_known(Digit::Three, three);
+    known_digits.add_known(Digit::Three, &three.string_rep);
 
     let nine_idx = len6
         .iter()
         .enumerate()
-        .find(|(idx, &sp)| sp.contains(&four))
+        .find(|(_, &sp)| sp.contains(&four))
         .expect("should exist (9)")
         .0;
     let nine = len6.remove(nine_idx);
-    add_known(Digit::Nine, nine);
+    known_digits.add_known(Digit::Nine, &nine.string_rep);
 
     let zero_idx = len6
         .iter()
         .enumerate()
-        .find(|(idx, &sp)| sp.contains(&one))
+        .find(|(_, &sp)| sp.contains(&one))
         .expect("should exist (0)")
         .0;
     let zero = len6.remove(zero_idx);
-    add_known(Digit::Zero, zero);
+    known_digits.add_known(Digit::Zero, &zero.string_rep);
 
     let six = len6.remove(0); // last one left
-    add_known(Digit::Six, six);
+    known_digits.add_known(Digit::Six, &six.string_rep);
 
     let five_idx = len5
         .iter()
         .enumerate()
-        .find(|(idx, &sp)| six.contains(sp))
+        .find(|(_, &sp)| six.contains(sp))
         .expect("should exist (5)")
         .0;
     let five = len5.remove(five_idx);
-    add_known(Digit::Five, five);
+    known_digits.add_known(Digit::Five, &five.string_rep);
 
     let two = len5.remove(0); // last one left
-    add_known(Digit::Two, two);
+    known_digits.add_known(Digit::Two, &two.string_rep);
 
-    (entry, known_digits)
+    (entry, known_digits.map)
 }
 
 impl SignalPattern {

@@ -21,29 +21,31 @@ fn find_risk_level(input: &[Vec<u32>], x: usize, y: usize) -> u64 {
     let value = input[y][x];
     if y > 0 {
         let above = input[y - 1][x];
-        if above < value {
+        if above <= value {
             return 0;
         }
     }
     if x > 0 {
         let left = input[y][x - 1];
-        if left < value {
+        if left <= value {
             return 0;
         }
     }
     if y < input.len() - 1 {
         let below = input[y + 1][x];
-        if below < value {
+        if below <= value {
             return 0;
         }
     }
     if x < input[y].len() - 1 {
         let right = input[y][x + 1];
-        if right < value {
+        if right <= value {
             return 0;
         }
     }
-    return value as u64 + 1;
+    
+    println!("low point {} found at ({},{})", value, x, y);
+    value as u64 + 1
 }
 
 // #[aoc(day9, part2)]
@@ -60,7 +62,7 @@ mod tests {
     fn input_known_answer() {
         let result = run(&input_generator(INPUT));
 
-        assert_eq!(result, 0);
+        assert_eq!(result, 448);
     }
 
     // #[test]

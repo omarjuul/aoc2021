@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+use crate::day5::Coord;
+
 #[aoc_generator(day9)]
 pub fn input_generator(input: &str) -> Vec<Vec<u32>> {
     input
@@ -7,7 +10,7 @@ pub fn input_generator(input: &str) -> Vec<Vec<u32>> {
 }
 
 #[aoc(day9, part1)]
-pub fn run(input: &[Vec<u32>]) -> u64 {
+pub fn run(input: &[Vec<u32>]) -> u32 {
     let mut sum = 0;
     for y in 0..input.len() {
         for x in 0..input[y].len() {
@@ -17,7 +20,7 @@ pub fn run(input: &[Vec<u32>]) -> u64 {
     sum
 }
 
-fn find_risk_level(input: &[Vec<u32>], x: usize, y: usize) -> u64 {
+fn find_risk_level(input: &[Vec<u32>], x: usize, y: usize) -> u32 {
     let value = input[y][x];
     if y > 0 {
         let above = input[y - 1][x];
@@ -45,12 +48,27 @@ fn find_risk_level(input: &[Vec<u32>], x: usize, y: usize) -> u64 {
     }
     
     println!("low point {} found at ({},{})", value, x, y);
-    value as u64 + 1
+    value + 1
 }
 
-// #[aoc(day9, part2)]
-// pub fn run_p2(input: &[u32]) -> u64 {
-// }
+#[aoc(day9, part2)]
+pub fn run_p2(input: &[Vec<u32>]) -> u64 {
+    // hashmap with low-point coordinates
+    let mut basin_sizes: HashMap<Coord, u32> = HashMap::new();
+    // for each coordinate find its low-point and +1 the corresponding value
+    for y in 0..input.len() {
+        for x in 0..input[y].len() {
+            let coord = find_low_point(input, x, y);
+            *basin_sizes.entry(coord).or_insert(0) += 1;
+        }
+    }
+    // somehow (sort the values and) take 3 biggest.
+    5
+}
+
+fn find_low_point(input: &[Vec<u32>], x: usize, y: usize) -> Coord {
+    todo!()
+}
 
 #[cfg(test)]
 mod tests {
@@ -65,12 +83,12 @@ mod tests {
         assert_eq!(result, 448);
     }
 
-    // #[test]
-    // fn input_known_answer_p2() {
-    //     let result = run_p2(&input_generator(INPUT));
-    //
-    //     assert_eq!(result, 0);
-    // }
+    #[test]
+    fn input_known_answer_p2() {
+        let result = run_p2(&input_generator(INPUT));
+    
+        assert_eq!(result, 0);
+    }
 
     const EXAMPLE: &str = "2199943210
 3987894921

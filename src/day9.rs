@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::hash::Hash;
 
 #[aoc_generator(day9)]
 pub fn input_generator(input: &str) -> Vec<Vec<u32>> {
@@ -64,8 +63,6 @@ pub fn run_p2(input: &[Vec<u32>]) -> u32 {
     }
     let mut basin_sizes = basins.basin_representatives.iter().map(|c| basin_sizes[c]).collect::<Vec<_>>();
     basin_sizes.sort_unstable();
-    println!("basin representatives: {:?}", basins.basin_representatives);
-    println!("basin sizes: {:?}", basin_sizes);
     basin_sizes.iter().rev().take(3).product()
 }
 
@@ -133,7 +130,6 @@ impl<'a> Basins<'a> {
             self.find_low_point(min_coord.x as usize, min_coord.y as usize)
         } else {
             let result = coord;
-            println!("low point found at {:?}", result);
             self.basin_representatives.push(result);
             Some(result)
         };

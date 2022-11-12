@@ -1,10 +1,12 @@
 #[aoc(day10, part1)]
-pub fn run(input: &str) -> u64
-{
-    input.lines().map(|l| match determine_corruption(l) {
-        Corruption::Corrupt(score) => score,
-        _ => 0
-    }).sum()
+pub fn run(input: &str) -> u64 {
+    input
+        .lines()
+        .map(|l| match determine_corruption(l) {
+            Corruption::Corrupt(score) => score,
+            _ => 0,
+        })
+        .sum()
 }
 
 fn determine_corruption(line: &str) -> Corruption {
@@ -34,7 +36,7 @@ fn closes(closing: char, opening: char) -> bool {
         '[' => closing == ']',
         '{' => closing == '}',
         '<' => closing == '>',
-        _ => panic!("expected one of {{(<[")
+        _ => panic!("expected one of {{(<["),
     }
 }
 
@@ -44,7 +46,7 @@ fn corruption_score_for_char(c: char) -> u64 {
         ']' => 57,
         '}' => 1_197,
         '>' => 25_137,
-        _ => panic!("expected one of )]}}>")
+        _ => panic!("expected one of )]}}>"),
     }
 }
 
@@ -52,7 +54,7 @@ fn corruption_score_for_char(c: char) -> u64 {
 pub fn run_p2(input: &str) -> u64 {
     let to_complete = input.lines().filter_map(|l| match determine_corruption(l) {
         Corruption::Corrupt(_) => None,
-        Corruption::ToComplete(a) => Some(a)
+        Corruption::ToComplete(a) => Some(a),
     });
 
     let mut scores: Vec<_> = to_complete.map(completion_score).collect();
@@ -75,7 +77,7 @@ fn completion_score_for_opening(opening: char) -> u64 {
         '[' => 2,
         '{' => 3,
         '<' => 4,
-        _ => panic!("expected one of {{(<[")
+        _ => panic!("expected one of {{(<["),
     }
 }
 
@@ -152,14 +154,12 @@ mod tests {
         assert_eq!(actual, 25137);
     }
 
-
     #[test]
     fn example_p2() {
         let actual = run_p2(EXAMPLE);
 
         assert_eq!(actual, 288957);
     }
-
 
     #[test]
     fn example_p2_1() {

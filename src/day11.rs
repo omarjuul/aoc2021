@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 #[aoc_generator(day11)]
 pub fn input_generator(input: &str) -> OctoField {
@@ -12,6 +12,7 @@ pub fn input_generator(input: &str) -> OctoField {
     OctoField::new(entries)
 }
 
+#[derive(Clone)]
 pub struct OctoField {
     entries: Vec<u8>,
     flashes: u64,
@@ -27,22 +28,24 @@ impl OctoField {
             *entry += 1;
         }
         
-        let mut prev_len = 1;
+        let mut prev_len = 101;
         let mut flashed: HashSet<usize> = HashSet::new();
         while flashed.len() != prev_len {
             prev_len = flashed.len();
             self.handle_flashes(&mut flashed);
+            // println!("{} octo's flashed", flashed.len());
         }
         self.flashes += flashed.len() as u64;
         for idx in flashed {
             self.entries[idx] = 0;
         }
+        // self.print();
     }
     
     fn handle_flashes(&mut self, flashed: &mut HashSet<usize>) {
         let mut to_up = Vec::new();
         for (index, entry) in self.entries.iter_mut().enumerate() {
-            if *entry >= 9 {
+            if *entry > 9 {
                 let flashes = flashed.insert(index);
                 if flashes {
                     to_up.push(index);
@@ -63,25 +66,52 @@ impl OctoField {
     
     fn neighbours_of(&self, index: usize) -> Vec<usize> {
         let mut result = Vec::new();
-        if index % 10 > 0 {
+        let can_go_left = index % 10 > 0;
+        let can_go_right = index % 10 < 9;
+        let can_go_up = index > 9;
+        let can_go_down = index < 90; 
+        if can_go_up {
+            result.push(index - 10);
+            if can_go_left {
+                result.push(index - 11);
+            }
+            if can_go_right {
+                result.push(index - 9)
+            }
+        }
+        if can_go_left {
             result.push(index - 1);
         }
-        if index % 10 < 9 {
+        if can_go_right {
             result.push(index + 1);
         }
-        if index > 9 {
-            result.push(index - 10);
-        }
-        if index < 90 {
+        if can_go_down {
             result.push(index + 10);
+            if can_go_left {
+                result.push(index + 9);
+            }
+            if can_go_right {
+                result.push(index + 11)
+            }
         }
         result        
+    }
+    
+    fn print(&self) {
+        for line in self.entries.chunks(10) {
+            println!("{:?}", line);
+        }
+        println!();
     }
 }
 
 #[aoc(day11, part1)]
 pub fn run(input: &OctoField) -> u64 {
-    todo!()
+    let mut input = input.clone(); // ugly but it works
+    for _ in 0..100 {
+        input.step();
+    }
+    input.flashes
 }
 
 // #[aoc(day11, part2)]
@@ -98,7 +128,7 @@ mod tests {
     fn input_known_answer() {
         let result = run(&input_generator(INPUT));
 
-        assert_eq!(result, 0);
+        assert_eq!(result, 1739);
     }
 
     // #[test]
@@ -108,12 +138,21 @@ mod tests {
     //     assert_eq!(result, 0);
     // }
 
-    const EXAMPLE: [u8; 5] = [3, 4, 3, 1, 2];
+    const EXAMPLE: &str = "5483143223
+2745854711
+5264556173
+6141336146
+6357385478
+4167524645
+2176841721
+6882881134
+4846848554
+5283751526";
 
     #[test]
     fn example() {
-        let actual = run(&OctoField::new(Vec::from(EXAMPLE)));
+        let actual = run(&input_generator(EXAMPLE));
 
-        assert_eq!(actual, 0);
+        assert_eq!(actual, 1656);
     }
 }

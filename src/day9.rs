@@ -61,7 +61,11 @@ pub fn run_p2(input: &[Vec<u32>]) -> u32 {
             }
         }
     }
-    let mut basin_sizes = basins.basin_representatives.iter().map(|c| basin_sizes[c]).collect::<Vec<_>>();
+    let mut basin_sizes = basins
+        .basin_representatives
+        .iter()
+        .map(|c| basin_sizes[c])
+        .collect::<Vec<_>>();
     basin_sizes.sort_unstable();
     basin_sizes.iter().rev().take(3).product()
 }
@@ -83,16 +87,36 @@ impl Coord {
         let mut result = Vec::new();
 
         if self.y > 0 {
-            result.push(Coord { x: self.x, y: self.y - 1, max_x: self.max_x, max_y: self.max_y });
+            result.push(Coord {
+                x: self.x,
+                y: self.y - 1,
+                max_x: self.max_x,
+                max_y: self.max_y,
+            });
         }
         if self.x + 1 < self.max_x {
-            result.push(Coord { x: self.x + 1, y: self.y, max_x: self.max_x, max_y: self.max_y });
+            result.push(Coord {
+                x: self.x + 1,
+                y: self.y,
+                max_x: self.max_x,
+                max_y: self.max_y,
+            });
         }
         if self.y + 1 < self.max_y {
-            result.push(Coord { x: self.x, y: self.y + 1, max_x: self.max_x, max_y: self.max_y });
+            result.push(Coord {
+                x: self.x,
+                y: self.y + 1,
+                max_x: self.max_x,
+                max_y: self.max_y,
+            });
         }
         if self.x > 0 {
-            result.push(Coord { x: self.x - 1, y: self.y, max_x: self.max_x, max_y: self.max_y });
+            result.push(Coord {
+                x: self.x - 1,
+                y: self.y,
+                max_x: self.max_x,
+                max_y: self.max_y,
+            });
         }
 
         result
@@ -124,8 +148,13 @@ impl<'a> Basins<'a> {
         }
 
         let coord = self.coord_at(x, y);
-        let neighbours = coord.neighbours().into_iter().map(|c| (self.grid[c.y][c.x], c));
-        let (min_val, min_coord) = neighbours.min_by_key(|t| t.0).expect("every point has at least two neighbours");
+        let neighbours = coord
+            .neighbours()
+            .into_iter()
+            .map(|c| (self.grid[c.y][c.x], c));
+        let (min_val, min_coord) = neighbours
+            .min_by_key(|t| t.0)
+            .expect("every point has at least two neighbours");
         let low_point = if min_val < value {
             self.find_low_point(min_coord.x as usize, min_coord.y as usize)
         } else {
